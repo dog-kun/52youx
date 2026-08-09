@@ -1,0 +1,386 @@
+/* ========== Hub 页面样式 ========== */
+
+/* 顶部导航栏 */
+.hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.hub-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hub-logo { font-size: 24px; }
+.hub-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.hub-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hub-user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hub-user-bar .hub-avatar {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+}
+.hub-user-bar .hub-username {
+  font-size: 14px; color: var(--text-primary); font-weight: 600;
+}
+.hub-user-bar .hub-stats-mini {
+  font-size: 12px; color: var(--text-secondary);
+}
+.hub-user-bar .admin-link {
+  font-size: 12px; color: var(--accent-yellow); text-decoration: none;
+}
+
+/* 主体布局 */
+.hub-body {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  gap: 24px;
+  min-height: calc(100vh - 56px);
+}
+.hub-main {
+  flex: 1;
+  min-width: 0;
+}
+.hub-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 登录区域 */
+.hub-login-section {
+  max-width: 440px;
+  margin: 40px auto;
+}
+.hub-login-section .login-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 游戏列表 */
+.hub-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.game-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.game-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+.game-card-icon {
+  font-size: 48px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.game-card-info {
+  flex: 1;
+  min-width: 0;
+}
+.game-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.game-card-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.game-card-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.game-card-meta .online-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  margin-right: 4px;
+}
+.game-card-enter {
+  flex-shrink: 0;
+}
+
+/* 侧边栏卡片 */
+.hub-sidebar-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.hub-sidebar-card h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+
+/* 在线统计 */
+.hub-stats {
+  display: flex;
+  gap: 24px;
+}
+.hub-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hub-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.hub-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* 广告 */
+.hub-ad-item {
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.hub-ad-item:last-child { margin-bottom: 0; }
+.hub-ad-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.hub-ad-content {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.hub-ad-link {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+/* 友情链接 */
+.hub-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hub-link-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: background var(--transition);
+}
+.hub-link-item:hover {
+  background: var(--border);
+}
+.hub-link-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.hub-link-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* 响应式 */
+@media (max-width: 900px) {
+  .hub-body {
+    flex-direction: column;
+    padding: 16px;
+  }
+  .hub-sidebar {
+    width: 100%;
+  }
+  .game-card {
+    padding: 16px;
+    gap: 14px;
+  }
+  .game-card-icon {
+    font-size: 36px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* ========== 我的战绩（按游戏类型分开） ========== */
+.my-stats-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.my-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent);
+}
+.my-stat-uno { border-left-color: #E53935; }
+.my-stat-monopoly { border-left-color: #1E88E5; }
+.my-stat-icon {
+  font-size: 36px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.my-stat-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.my-stat-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+.my-stat-detail .stat-win { color: var(--accent-green); font-weight: 600; }
+.my-stat-detail .stat-loss { color: var(--accent-red); font-weight: 600; }
+.my-stat-detail .stat-rate { color: var(--accent-yellow); }
+.my-stat-detail .stat-total { color: var(--text-muted); }
+.stats-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+/* ========== 最近对局 ========== */
+.history-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.history-tab {
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.history-tab:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.history-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-item {
+  padding: 14px 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.history-uno { border-left: 3px solid #E53935; }
+.history-monopoly { border-left: 3px solid #1E88E5; }
+.history-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.history-game-tag {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.history-time { margin-left: auto; }
+.history-duration { color: var(--text-secondary); }
+.history-winner {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-yellow);
+}
+.history-rankings {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.history-loading,
+.history-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+}

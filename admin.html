@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 大富翁联机</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--bg-primary); }
+    .admin-page { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+    }
+    .admin-header h1 { font-size: 24px; }
+    .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .admin-tab {
+      padding: 10px 20px; background: var(--bg-secondary); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition);
+    }
+    .admin-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .admin-table th, .admin-table td {
+      padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .admin-table th { color: var(--text-secondary); font-weight: 600; }
+    .admin-table tr:hover { background: var(--bg-tertiary); }
+    .admin-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+    }
+    .admin-card h3 { font-size: 16px; margin-bottom: 12px; }
+    .admin-form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+    .admin-form-row .input-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+    .admin-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); margin-bottom: 8px;
+    }
+    .admin-item-info { flex: 1; }
+    .admin-item-info .item-name { font-weight: 600; font-size: 14px; }
+    .admin-item-info .item-desc { font-size: 12px; color: var(--text-secondary); }
+    .admin-item-actions { display: flex; gap: 6px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-admin { background: rgba(210,153,34,0.2); color: var(--accent-yellow); }
+    .badge-user { background: rgba(88,166,255,0.2); color: var(--accent); }
+    .badge-active { background: rgba(63,185,80,0.2); color: var(--accent-green); }
+    .badge-inactive { background: rgba(248,81,73,0.2); color: var(--accent-red); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
+    }
+    .stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-card .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .admin-login {
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .admin-login-card {
+      background: var(--bg-secondary); padding: 40px; border-radius: 16px;
+      box-shadow: var(--shadow-lg); width: 360px; border: 1px solid var(--border); text-align: center;
+    }
+    .admin-login-card h1 { font-size: 24px; margin-bottom: 8px; }
+    .admin-login-card p { color: var(--text-secondary); margin-bottom: 24px; }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; }
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px; background: var(--bg-tertiary);
+      border-radius: 11px; cursor: pointer; border: 1px solid var(--border); transition: all var(--transition);
+    }
+    .toggle-switch.on { background: var(--accent-green); }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+      background: #fff; border-radius: 50%; transition: left var(--transition);
+    }
+    .toggle-switch.on::after { left: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- 登录检查 -->
+<div id="admin-login" class="admin-login" style="display:none;">
+  <div class="admin-login-card">
+    <div style="font-size:48px;">🔐</div>
+    <h1>管理后台</h1>
+    <p>请先登录管理员账号</p>
+    <a href="/" class="btn btn-primary btn-large">前往登录</a>
+  </div>
+</div>
+
+<!-- 管理页面 -->
+<div id="admin-page" class="admin-page" style="display:none;">
+  <div class="admin-header">
+    <h1>⚙️ 管理后台</h1>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="admin-user-info" style="font-size:14px;color:var(--text-secondary);"></span>
+      <a href="/" class="btn btn-secondary btn-small">返回大厅</a>
+    </div>
+  </div>
+
+  <!-- 统计概览 -->
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <!-- 标签页 -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-admin-tab="users">👥 用户管理</button>
+    <button class="admin-tab" data-admin-tab="links">🔗 友情链接</button>
+    <button class="admin-tab" data-admin-tab="ads">📢 广告管理</button>
+  </div>
+
+  <!-- 用户管理 -->
+  <div class="admin-panel active" id="panel-users">
+    <div class="admin-card">
+      <h3>用户列表</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>头像</th>
+            <th>用户名</th>
+            <th>昵称</th>
+            <th>QQ</th>
+            <th>战绩</th>
+            <th>角色</th>
+            <th>注册时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 友情链接管理 -->
+  <div class="admin-panel" id="panel-links">
+    <div class="admin-card">
+      <h3>添加友情链接</h3>
+      <div class="admin-form-row">
+        <div class="input-group">
+          <label>名称</label>
+          <input type="text" id="link-name" placeholder="链接名称" maxlength="30">
+        </div>
+        <div class="input-group">
+          <label>URL</label>
+          <input type="text" id="link-url" placeholder="https://..." maxlength="200">
+        </div>
+        <div class="input-group">
+          <label>描述（选填）</label>
+          <input type="text" id="link-desc" placeholder="简短描述" maxlength="50">
+        </div>
+        <div class="input-group" style="max-width:80px;">
+          <label>排序</label>
+          <input type="number" id="link-sort" value="0" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="addLink()">添加</button>
+      </div>
+    </div>
+    <div class="admin-card">
+      <h3>现有链接</h3>
+      <div id="links-list"></div>
+    </div>
+  </div>
+
+  <!-- 广告管理 -->
+  <div class="admin-panel" id="panel-ads">
+    <div class="admin-card">
+      <h3>添加广告</h3>
+      <div class="admin-form-row">
+        <div class="input-group">
+          <label>标题</label>
+          <input type="text" id="ad-title" placeholder="广告标题" maxlength="50">
+        </div>
+        <div class="input-group">
+          <label>内容</label>
+          <input type="text" id="ad-content" placeholder="广告内容" maxlength="200">
+        </div>
+        <div class="input-group">
+          <label>链接URL（选填）</label>
+          <input type="text" id="ad-link" placeholder="https://..." maxlength="200">
+        </div>
+        <div class="input-group" style="max-width:120px;">
+          <label>位置</label>
+          <select id="ad-position">
+            <option value="lobby">大厅</option>
+            <option value="game">游戏内</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="addAd()">添加</button>
+      </div>
+    </div>
+    <div class="admin-card">
+      <h3>现有广告</h3>
+      <div id="ads-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script>
+let adminUser = null;
+
+// 初始化
+async function initAdmin() {
+  try {
+    const res = await apiFetch('/api/me');
+    const data = await res.json();
+    if (!data.loggedIn || !data.user) {
+      document.getElementById('admin-login').style.display = 'flex';
+      return;
+    }
+    // 检查是否管理员
+    const usersRes = await apiFetch('/api/admin/users');
+    if (usersRes.status === 403) {
+      document.getElementById('admin-login').style.display = 'flex';
+      document.querySelector('.admin-login-card p').textContent = '无管理员权限';
+      return;
+    }
+    adminUser = data.user;
+    document.getElementById('admin-page').style.display = 'block';
+    document.getElementById('admin-user-info').textContent = `管理员: ${adminUser.nickname}`;
+    loadStats();
+    loadUsers();
+    loadLinks();
+    loadAds();
+    setupTabs();
+  } catch (e) {
+    document.getElementById('admin-login').style.display = 'flex';
+  }
+}
+
+function setupTabs() {
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + tab.dataset.adminTab).classList.add('active');
+    });
+  });
+}
+
+// 统计
+async function loadStats() {
+  try {
+    const res = await apiFetch('/api/admin/users');
+    const users = await res.json();
+    const totalUsers = users.length;
+    const admins = users.filter(u => u.is_admin).length;
+    const totalGames = users.reduce((s, u) => s + (u.total_games || 0), 0);
+    const totalWins = users.reduce((s, u) => s + (u.wins || 0), 0);
+
+    const grid = document.getElementById('stat-grid');
+    grid.innerHTML = `
+      <div class="stat-card"><div class="stat-value">${totalUsers}</div><div class="stat-label">总用户数</div></div>
+      <div class="stat-card"><div class="stat-value">${admins}</div><div class="stat-label">管理员</div></div>
+      <div class="stat-card"><div class="stat-value">${totalGames}</div><div class="stat-label">总对局数</div></div>
+      <div class="stat-card"><div class="stat-value">${totalWins}</div><div class="stat-label">总胜利数</div></div>
+    `;
+  } catch (e) {
+    console.error('Failed to load stats:', e);
+  }
+}
+
+// 用户管理
+async function loadUsers() {
+  try {
+    const res = await apiFetch('/api/admin/users');
+    const users = await res.json();
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '';
+    for (const u of users) {
+      const tr = document.createElement('tr');
+      const date = new Date(u.created_at * 1000).toLocaleDateString('zh-CN');
+      const winRate = u.total_games > 0 ? Math.round(u.wins / u.total_games * 100) : 0;
+      tr.innerHTML = `
+        <td>${u.id}</td>
+        <td>${u.avatar ? `<img src="${u.avatar}" class="avatar-sm" alt="" onerror="this.style.display='none'">` : '<div class="avatar-sm" style="background:#666"></div>'}</td>
+        <td>${escapeHtml(u.username || '-')}</td>
+        <td>${escapeHtml(u.nickname)}</td>
+        <td>${u.qq || '-'}</td>
+        <td>胜${u.wins||0} 负${u.losses||0} (${winRate}%)</td>
+        <td><span class="badge ${u.is_admin ? 'badge-admin' : 'badge-user'}">${u.is_admin ? '管理员' : '用户'}</span></td>
+        <td>${date}</td>
+        <td>
+          <button class="btn btn-small ${u.is_admin ? 'btn-secondary' : 'btn-primary'}" onclick="toggleAdmin(${u.id}, ${u.is_admin})">
+            ${u.is_admin ? '取消管理' : '设为管理'}
+          </button>
+          ${u.id !== adminUser.id ? `<button class="btn btn-small btn-danger" onclick="deleteUser(${u.id}, '${escapeHtml(u.nickname)}')">删除</button>` : ''}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    console.error('Failed to load users:', e);
+  }
+}
+
+async function toggleAdmin(userId, currentAdmin) {
+  try {
+    await apiFetch(`/api/admin/users/${userId}/admin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isAdmin: !currentAdmin }),
+    });
+    loadUsers();
+    loadStats();
+  } catch (e) {
+    alert('操作失败');
+  }
+}
+
+async function deleteUser(userId, nickname) {
+  if (!confirm(`确定删除用户 "${nickname}" 吗？此操作不可撤销。`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${userId}/delete`, { method: 'POST' });
+    loadUsers();
+    loadStats();
+  } catch (e) {
+    alert('删除失败');
+  }
+}
+
+// 友情链接管理
+async function loadLinks() {
+  try {
+    const res = await apiFetch('/api/links');
+    const links = await res.json();
+    const container = document.getElementById('links-list');
+    if (!links || links.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">暂无友情链接</p>';
+      return;
+    }
+    container.innerHTML = '';
+    for (const link of links) {
+      const item = document.createElement('div');
+      item.className = 'admin-item';
+      item.innerHTML = `
+        <div class="admin-item-info">
+          <div class="item-name">${escapeHtml(link.name)} <span style="font-size:11px;color:var(--text-muted);">(排序:${link.sort_order})</span></div>
+          <div class="item-desc">${escapeHtml(link.url)}${link.description ? ' - ' + escapeHtml(link.description) : ''}</div>
+        </div>
+        <div class="admin-item-actions">
+          <button class="btn btn-small btn-danger" onclick="deleteLink(${link.id})">删除</button>
+        </div>
+      `;
+      container.appendChild(item);
+    }
+  } catch (e) {
+    console.error('Failed to load links:', e);
+  }
+}
+
+async function addLink() {
+  const name = document.getElementById('link-name').value.trim();
+  const url = document.getElementById('link-url').value.trim();
+  const description = document.getElementById('link-desc').value.trim();
+  const sortOrder = parseInt(document.getElementById('link-sort').value) || 0;
+  if (!name || !url) { alert('名称和URL必填'); return; }
+  try {
+    await apiFetch('/api/admin/links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, url, description, sortOrder }),
+    });
+    document.getElementById('link-name').value = '';
+    document.getElementById('link-url').value = '';
+    document.getElementById('link-desc').value = '';
+    document.getElementById('link-sort').value = '0';
+    loadLinks();
+  } catch (e) {
+    alert('添加失败');
+  }
+}
+
+async function deleteLink(id) {
+  if (!confirm('确定删除此链接？')) return;
+  try {
+    await apiFetch(`/api/admin/links/${id}/delete`, { method: 'POST' });
+    loadLinks();
+  } catch (e) {
+    alert('删除失败');
+  }
+}
+
+// 广告管理
+async function loadAds() {
+  try {
+    const res = await apiFetch('/api/ads');
+    const ads = await res.json();
+    const container = document.getElementById('ads-list');
+    if (!ads || ads.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">暂无广告</p>';
+      return;
+    }
+    container.innerHTML = '';
+    for (const ad of ads) {
+      const item = document.createElement('div');
+      item.className = 'admin-item';
+      item.innerHTML = `
+        <div class="admin-item-info">
+          <div class="item-name">${escapeHtml(ad.title)} <span class="badge ${ad.is_active ? 'badge-active' : 'badge-inactive'}">${ad.is_active ? '启用' : '禁用'}</span> <span style="font-size:11px;color:var(--text-muted);">[${ad.position}]</span></div>
+          <div class="item-desc">${escapeHtml(ad.content || '')}${ad.link_url ? ' → ' + escapeHtml(ad.link_url) : ''}</div>
+        </div>
+        <div class="admin-item-actions">
+          <button class="btn btn-small ${ad.is_active ? 'btn-secondary' : 'btn-success'}" onclick="toggleAd(${ad.id}, ${ad.is_active})">${ad.is_active ? '禁用' : '启用'}</button>
+          <button class="btn btn-small btn-danger" onclick="deleteAd(${ad.id})">删除</button>
+        </div>
+      `;
+      container.appendChild(item);
+    }
+  } catch (e) {
+    console.error('Failed to load ads:', e);
+  }
+}
+
+async function addAd() {
+  const title = document.getElementById('ad-title').value.trim();
+  const content = document.getElementById('ad-content').value.trim();
+  const linkUrl = document.getElementById('ad-link').value.trim();
+  const position = document.getElementById('ad-position').value;
+  if (!title) { alert('标题必填'); return; }
+  try {
+    await apiFetch('/api/admin/ads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content, linkUrl, position, isActive: true }),
+    });
+    document.getElementById('ad-title').value = '';
+    document.getElementById('ad-content').value = '';
+    document.getElementById('ad-link').value = '';
+    loadAds();
+  } catch (e) {
+    alert('添加失败');
+  }
+}
+
+async function toggleAd(id, currentActive) {
+  try {
+    // 先获取当前数据，再更新
+    const res = await apiFetch('/api/ads');
+    const ads = await res.json();
+    const ad = ads.find(a => a.id === id);
+    if (!ad) return;
+    await apiFetch(`/api/admin/ads/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: ad.title,
+        content: ad.content,
+        linkUrl: ad.link_url,
+        position: ad.position,
+        isActive: !currentActive,
+      }),
+    });
+    loadAds();
+  } catch (e) {
+    alert('操作失败');
+  }
+}
+
+async function deleteAd(id) {
+  if (!confirm('确定删除此广告？')) return;
+  try {
+    await apiFetch(`/api/admin/ads/${id}/delete`, { method: 'POST' });
+    loadAds();
+  } catch (e) {
+    alert('删除失败');
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+// 启动
+initAdmin();
+</script>
+</body>
+</html>

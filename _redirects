@@ -1,0 +1,7 @@
+# CF Pages 路由规则（200 = 重写，URL 不变）
+/         /hub.html    200
+/dfw      /index.html  200
+/dfw/*    /index.html  200
+/uno      /uno.html    200
+/uno/*    /uno.html    200
+/admin    /admin.html  200

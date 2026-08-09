@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大富翁联机</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ============ 大厅界面 ============ -->
+<section id="view-lobby" class="view active">
+  <!-- 顶部返回栏 -->
+  <div class="lobby-back-bar">
+    <a href="/" class="btn btn-secondary btn-small">← 返回游戏大厅</a>
+  </div>
+  <div class="lobby-page">
+    <!-- 顶部两小格：开始游戏 + 个人信息 -->
+    <div class="lobby-top-row">
+      <!-- 开始游戏 -->
+      <div class="lobby-mini-card">
+        <h2>🎲 开始游戏</h2>
+        <div class="lobby-tabs">
+          <button class="lobby-tab active" data-lobby-tab="create">创建</button>
+          <button class="lobby-tab" data-lobby-tab="join">加入</button>
+        </div>
+        <!-- 创建房间面板 -->
+        <div class="lobby-tab-content active" id="lobby-tab-create">
+          <div class="input-group">
+            <label>最大人数</label>
+            <select id="max-players-select">
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+              <option value="4">4人</option>
+              <option value="5">5人</option>
+              <option value="6" selected>6人</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>破产模式</label>
+            <select id="bankruptcy-mode-select">
+              <option value="1">模式1：随时可主动破产</option>
+              <option value="2">模式2：债务>资产才破产</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>初始资金</label>
+            <select id="starting-money-select">
+              <option value="1000">$1000（紧凑）</option>
+              <option value="1500" selected>$1500（标准）</option>
+              <option value="2000">$2000（宽松）</option>
+              <option value="3000">$3000（富豪）</option>
+              <option value="5000">$5000（疯狂）</option>
+            </select>
+          </div>
+          <div class="config-checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="cfg-pre-auction" checked>
+              <span>开局拍卖</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="cfg-chance" checked>
+              <span>机会卡</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="cfg-community" checked>
+              <span>社区福利卡</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="cfg-trade" checked>
+              <span>玩家交易</span>
+            </label>
+          </div>
+          <button id="btn-create" class="btn btn-primary btn-large">创建房间</button>
+        </div>
+        <!-- 加入房间面板 -->
+        <div class="lobby-tab-content" id="lobby-tab-join" style="display:none;">
+          <div class="input-group">
+            <label>房间号</label>
+            <input type="text" id="room-code-input" placeholder="输入6位房间号" maxlength="6" style="text-transform:uppercase">
+          </div>
+          <button id="btn-join" class="btn btn-primary btn-large">加入房间</button>
+        </div>
+      </div>
+
+      <!-- 个人信息 -->
+      <div class="lobby-mini-card" id="lobby-profile-card">
+        <h2>👤 个人信息</h2>
+        <div class="lobby-user-info" id="lobby-user-info"></div>
+        <div class="lobby-profile-actions">
+          <button id="btn-lobby-history" class="btn btn-secondary btn-small">📜 历史对局</button>
+          <button id="btn-logout" class="btn btn-danger btn-small">退出登录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下方：当前对局 + 历史对局 -->
+    <div class="lobby-bottom-section">
+      <div class="lobby-section-header">
+        <div class="lobby-section-tabs">
+          <button class="section-tab active" data-section="ongoing">🎮 当前对局</button>
+          <button class="section-tab" data-section="history">📜 历史对局</button>
+        </div>
+        <button id="btn-refresh-rooms" class="btn btn-small btn-secondary">刷新</button>
+      </div>
+
+      <!-- 当前对局列表 -->
+      <div class="lobby-section-content active" id="section-ongoing">
+        <div id="ongoing-games" class="ongoing-games-grid">
+          <p class="empty-hint">暂无进行中的对局</p>
+        </div>
+      </div>
+
+      <!-- 历史对局列表 -->
+      <div class="lobby-section-content" id="section-history" style="display:none;">
+        <div id="lobby-history-list" class="lobby-history-grid">
+          <p class="empty-hint">加载中...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 友情链接 -->
+    <div class="lobby-friend-links" id="friend-links-container" style="display:none;">
+      <h3>🔗 友情链接</h3>
+      <div id="friend-links" class="friend-links-list"></div>
+    </div>
+  </div>
+
+  <!-- 房间等待区 -->
+  <div id="room-waiting" class="room-waiting" style="display:none;">
+    <div class="room-info-bar">
+      <div class="room-code-display">
+        <span class="label">房间号</span>
+        <span id="display-room-code" class="code"></span>
+        <button id="btn-copy-code" class="btn btn-small">复制</button>
+        <button id="btn-copy-link" class="btn btn-small">复制链接</button>
+      </div>
+      <button id="btn-leave-lobby" class="btn btn-danger btn-small">离开</button>
+    </div>
+    <div class="waiting-players">
+      <h3>等待玩家加入... (<span id="player-count">0</span>/<span id="max-player-count">6</span>)</h3>
+      <div id="lobby-players" class="lobby-players-list"></div>
+    </div>
+    <div class="game-rules-info">
+      <p>破产模式: <span id="display-bankruptcy-mode"></span></p>
+      <p>初始资金: $<span id="display-starting-money">1500</span> / 经过起点: $200</p>
+      <p id="display-pre-auction">开局将随机抽取地皮进行拍卖</p>
+      <p id="display-props"></p>
+    </div>
+    <button id="btn-start-game" class="btn btn-primary btn-large" style="display:none;">开始游戏</button>
+  </div>
+</section>
+
+<!-- ============ 游戏界面 ============ -->
+<section id="view-game" class="view">
+  <!-- 顶部栏 -->
+  <header class="game-header">
+    <div class="header-left">
+      <span class="game-logo">🎲</span>
+      <span class="room-label">房间: <strong id="game-room-code"></strong></span>
+    </div>
+    <div class="header-right">
+      <button id="btn-sound" class="btn btn-small" title="音效开关">🔊</button>
+      <button id="btn-history" class="btn btn-small">📜 记录</button>
+      <button id="btn-theme" class="btn btn-small">🌓</button>
+      <button id="btn-surrender" class="btn btn-danger btn-small" style="display:none;">🏳 认输</button>
+      <button id="btn-leave-game" class="btn btn-danger btn-small">离开</button>
+    </div>
+  </header>
+
+  <!-- 主体 -->
+  <div class="game-body">
+    <!-- 棋盘 -->
+    <div class="board-wrapper">
+      <div id="board" class="board"></div>
+      <div id="board-center" class="board-center">
+        <div id="dice-area" class="dice-area">
+          <div class="dice" id="dice-1">⚀</div>
+          <div class="dice" id="dice-2">⚁</div>
+        </div>
+        <div id="turn-info" class="turn-info"></div>
+        <div id="board-actions" class="board-actions"></div>
+        <!-- 动画跳过按钮 -->
+        <div id="anim-skip-area" class="anim-skip-area" style="display:none;">
+          <button id="btn-skip-anim" class="btn btn-secondary btn-small">⏭ 跳过动画</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 侧边栏（浮动面板） -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">信息面板</span>
+        <button id="btn-minimize-sidebar" class="sidebar-min-btn" title="收起面板">◀</button>
+      </div>
+      <!-- 玩家列表 -->
+      <div id="players-panel" class="players-panel"></div>
+
+      <!-- 操作区 -->
+      <div id="action-panel" class="action-panel"></div>
+
+      <!-- 标签页：日志 / 聊天 -->
+      <div class="tab-container" id="tab-container">
+        <div class="tab-headers">
+          <button class="tab-btn active" data-tab="log">📋 日志</button>
+          <button class="tab-btn" data-tab="chat">💬 聊天</button>
+          <button id="btn-collapse-tabs" class="tab-collapse-btn" title="折叠/展开">收起</button>
+        </div>
+        <div class="tab-content">
+          <div id="log-panel" class="tab-pane active">
+            <div id="game-log" class="game-log"></div>
+          </div>
+          <div id="chat-panel" class="tab-pane">
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-row">
+              <div class="chat-quick">
+                <button class="quick-btn" data-msg="求购地块，私聊！">求购</button>
+                <button class="quick-btn" data-msg="救命啊，快破产了！">求助</button>
+                <button class="quick-btn" data-msg="祝大家好运！🍀">祝福</button>
+              </div>
+              <div class="chat-input-group">
+                <input type="text" id="chat-input" placeholder="输入消息..." maxlength="200">
+                <button id="btn-send-chat" class="btn btn-primary btn-small">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <!-- 侧边栏恢复按钮 -->
+    <button id="btn-restore-sidebar" class="sidebar-restore-btn" title="显示面板" style="display:none;">📋</button>
+  </div>
+</section>
+
+<!-- ============ 拍卖弹窗 ============ -->
+<div id="auction-modal" class="modal" style="display:none;">
+  <div class="modal-content auction-content">
+    <h2>🔨 拍卖</h2>
+    <div class="auction-property" id="auction-property"></div>
+    <div class="auction-timer">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+    <div class="auction-highest" id="auction-highest"></div>
+    <div class="auction-bidders" id="auction-bidders"></div>
+    <div class="auction-bid-display">
+      <span class="bid-label">你的出价</span>
+      <span class="bid-amount" id="bid-amount-display">$0</span>
+    </div>
+    <div class="auction-slider-wrap">
+      <input type="range" id="bid-slider" class="bid-slider" min="0" max="100" value="0" step="1">
+    </div>
+    <div class="auction-fine-tune">
+      <button class="btn btn-small tune-btn" data-add="-100">-100</button>
+      <button class="btn btn-small tune-btn" data-add="-10">-10</button>
+      <button class="btn btn-small tune-btn" data-add="-1">-1</button>
+      <button class="btn btn-small tune-btn" data-add="1">+1</button>
+      <button class="btn btn-small tune-btn" data-add="10">+10</button>
+      <button class="btn btn-small tune-btn" data-add="100">+100</button>
+    </div>
+    <div class="auction-bid-input">
+      <input type="number" id="bid-input" placeholder="直接输入金额" min="1">
+      <button id="btn-bid" class="btn btn-primary">确认出价</button>
+    </div>
+    <div class="auction-quick-bids">
+      <button class="btn btn-small quick-bid" data-add="1">+1</button>
+      <button class="btn btn-small quick-bid" data-add="10">+10</button>
+      <button class="btn btn-small quick-bid" data-add="50">+50</button>
+      <button class="btn btn-small quick-bid" data-add="100">+100</button>
+      <button class="btn btn-small quick-bid" data-set="minbid">最低价</button>
+      <button class="btn btn-small quick-bid" data-set="allin">全押</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 交易弹窗 ============ -->
+<div id="trade-modal" class="modal" style="display:none;">
+  <div class="modal-content trade-content">
+    <h2>🤝 玩家交易</h2>
+    <div class="trade-layout">
+      <div class="trade-side" id="trade-my-side">
+        <h3 id="trade-my-name">我</h3>
+        <div class="trade-section">
+          <label>提供金钱</label>
+          <input type="number" id="trade-my-money" value="0" min="0">
+        </div>
+        <div class="trade-section">
+          <label>提供地产 (点击选中)</label>
+          <div id="trade-my-properties" class="trade-prop-list"></div>
+        </div>
+      </div>
+      <div class="trade-arrow">⇄</div>
+      <div class="trade-side" id="trade-their-side">
+        <h3 id="trade-their-name">对方</h3>
+        <div class="trade-section">
+          <label>索要金钱</label>
+          <input type="number" id="trade-their-money" value="0" min="0">
+        </div>
+        <div class="trade-section">
+          <label>索要地产 (点击选中)</label>
+          <div id="trade-their-properties" class="trade-prop-list"></div>
+        </div>
+      </div>
+    </div>
+    <div id="trade-status" class="trade-status"></div>
+    <div class="trade-buttons">
+      <button id="btn-trade-send" class="btn btn-primary">发送报价</button>
+      <button id="btn-trade-accept" class="btn btn-success" style="display:none;">接受</button>
+      <button id="btn-trade-decline" class="btn btn-danger" style="display:none;">拒绝</button>
+      <button id="btn-trade-cancel" class="btn btn-secondary">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 卡片弹窗 ============ -->
+<div id="card-modal" class="modal" style="display:none;">
+  <div class="modal-content card-content">
+    <div class="card-icon" id="card-icon"></div>
+    <div class="card-title" id="card-title"></div>
+    <div class="card-text" id="card-text"></div>
+    <button id="btn-close-card" class="btn btn-primary">确定</button>
+  </div>
+</div>
+
+<!-- ============ 地块详情弹窗 ============ -->
+<div id="property-modal" class="modal" style="display:none;">
+  <div class="modal-content property-content">
+    <div id="property-detail"></div>
+    <div id="property-actions"></div>
+    <button id="btn-close-property" class="btn btn-secondary">关闭</button>
+  </div>
+</div>
+
+<!-- ============ 历史记录弹窗 ============ -->
+<div id="history-modal" class="modal" style="display:none;">
+  <div class="modal-content history-content">
+    <h2>📜 历史对局</h2>
+    <div id="history-list" class="history-list"></div>
+    <div id="history-detail" class="history-detail" style="display:none;">
+      <button id="btn-history-back" class="btn btn-small btn-secondary">← 返回列表</button>
+      <div id="history-detail-content"></div>
+    </div>
+    <button id="btn-close-history" class="btn btn-primary">关闭</button>
+  </div>
+</div>
+
+<!-- ============ 游戏结束弹窗 ============ -->
+<div id="gameover-modal" class="modal" style="display:none;">
+  <div class="modal-content gameover-content">
+    <div class="gameover-trophy">🏆</div>
+    <h2 id="gameover-title">游戏结束</h2>
+    <div id="gameover-winner"></div>
+    <div id="gameover-rankings"></div>
+    <div class="gameover-buttons">
+      <button id="btn-view-history" class="btn btn-primary">查看记录</button>
+      <button id="btn-back-lobby" class="btn btn-secondary">返回大厅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Toast 提示 ============ -->
+<div id="toast-container"></div>
+
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/sound.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
