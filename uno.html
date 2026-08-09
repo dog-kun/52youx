@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO 联机 - 游戏聚合平台</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/uno.css">
+</head>
+<body>
+
+<!-- ============ 返回大厅栏 ============ -->
+<header class="uno-back-bar">
+  <a href="/" class="uno-back-link">← 返回游戏大厅</a>
+</header>
+
+<!-- ============ 大厅 / 等待区 ============ -->
+<section id="view-lobby" class="view active">
+  <div class="uno-lobby-page">
+
+    <!-- 创建房间 + 加入房间 -->
+    <div class="uno-lobby-top">
+      <div class="uno-lobby-card">
+        <h2>🃏 创建房间</h2>
+        <div class="input-group">
+          <label>最大玩家数</label>
+          <select id="max-players-select">
+            <option value="2">2 人</option>
+            <option value="3">3 人</option>
+            <option value="4">4 人</option>
+            <option value="5">5 人</option>
+            <option value="6">6 人</option>
+            <option value="7">7 人</option>
+            <option value="8">8 人</option>
+            <option value="9">9 人</option>
+            <option value="10" selected>10 人</option>
+          </select>
+        </div>
+        <div class="uno-rules-info">
+          UNO 规则：每人 7 张牌，按颜色或数字/符号出牌，先出完者获胜。<br>
+          万能牌可指定颜色，+2 / +4 可累计连锁，剩 1 张时记得喊 UNO！
+        </div>
+        <button id="btn-create" class="btn btn-primary btn-large">创建房间</button>
+      </div>
+
+      <div class="uno-lobby-card">
+        <h2>🔗 加入房间</h2>
+        <div class="input-group">
+          <label>房间号</label>
+          <input type="text" id="room-code-input" placeholder="输入 6 位房间号" maxlength="6" style="text-transform:uppercase;">
+        </div>
+        <button id="btn-join" class="btn btn-secondary btn-large">加入房间</button>
+        <div style="margin-top:12px;">
+          <button id="btn-spectate" class="btn btn-small">👁 以观众身份加入</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 房间等待区（进入房间后显示） -->
+    <div id="room-waiting" class="uno-room-waiting" style="display:none;">
+      <div class="room-info-bar">
+        <div class="room-code-display">
+          <span class="label">房间号</span>
+          <span id="display-room-code" class="code">------</span>
+          <button id="btn-copy-code" class="btn btn-small btn-secondary" title="复制房间号">复制</button>
+          <button id="btn-copy-link" class="btn btn-small btn-secondary" title="复制邀请链接">链接</button>
+        </div>
+        <div class="uno-waiting-status">
+          等待玩家加入... <span id="player-count">0</span>/<span id="max-player-count">10</span>
+        </div>
+      </div>
+
+      <div class="waiting-players">
+        <h3>房间玩家</h3>
+        <div id="lobby-players" class="lobby-players-list"></div>
+      </div>
+
+      <div class="uno-lobby-actions">
+        <button id="btn-start-game" class="btn btn-success btn-large" style="display:none;">▶ 开始游戏</button>
+        <button id="btn-leave-lobby" class="btn btn-danger">离开房间</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ 游戏区 ============ -->
+<section id="view-game" class="view">
+  <!-- 游戏头部 -->
+  <header class="uno-game-header">
+    <div class="header-left">
+      <span class="uno-logo">🃏 UNO</span>
+      <span class="room-label">房间 <strong id="game-room-code">------</strong></span>
+    </div>
+    <div class="header-right">
+      <span id="uno-turn-info" class="uno-turn-info">等待中...</span>
+      <button id="btn-sound" class="btn btn-small btn-secondary" title="音效开关">🔊</button>
+      <button id="btn-theme" class="btn btn-small btn-secondary" title="切换主题">☀️</button>
+      <button id="btn-leave-game" class="btn btn-small btn-danger" title="离开房间">离开</button>
+    </div>
+  </header>
+
+  <!-- 游戏主体 -->
+  <div class="uno-game-body">
+    <!-- 对手区域 -->
+    <div id="opponents-area" class="uno-opponents"></div>
+
+    <!-- 中央桌面 -->
+    <div class="uno-table">
+      <div class="uno-center" id="uno-center">
+        <div class="uno-direction-row">
+          <div id="direction-indicator" class="uno-direction" title="出牌方向">↻</div>
+          <div id="color-indicator" class="uno-color-indicator" title="当前颜色"></div>
+          <div id="draw-stack-indicator" class="uno-draw-stack" title="累计罚牌" style="display:none;">+0</div>
+        </div>
+
+        <div class="uno-piles">
+          <div id="uno-deck" class="uno-deck" title="点击摸牌">
+            <div class="uno-card uno-card-back">
+              <div class="uno-back-logo">UNO</div>
+            </div>
+            <div class="uno-deck-count" id="deck-count">0</div>
+          </div>
+          <div id="uno-discard" class="uno-discard">
+            <!-- 弃牌堆顶牌由 JS 渲染 -->
+          </div>
+        </div>
+
+        <div id="uno-action-prompt" class="uno-action-prompt"></div>
+      </div>
+    </div>
+
+    <!-- 浮动侧边面板：聊天 + 日志（不占游戏空间） -->
+    <button id="btn-side-toggle" class="uno-side-toggle" title="显示/隐藏面板">📋</button>
+    <div id="uno-side-panels" class="uno-side-panels">
+      <div id="uno-chat-panel" class="uno-chat-panel">
+        <div class="uno-panel-header" id="chat-header">
+          <span>💬 聊天</span>
+          <button id="btn-toggle-chat" class="uno-panel-toggle">−</button>
+        </div>
+        <div id="uno-chat-body" class="uno-chat-body">
+          <div id="uno-chat-messages" class="uno-chat-messages"></div>
+          <div class="uno-chat-input-row">
+            <input type="text" id="uno-chat-input" placeholder="输入消息..." maxlength="100">
+            <button id="btn-send-chat" class="btn btn-primary btn-small">发送</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="uno-log-panel" class="uno-log-panel">
+        <div class="uno-panel-header" id="log-header">
+          <span>📋 日志</span>
+          <button id="btn-toggle-log" class="uno-panel-toggle">−</button>
+        </div>
+        <div id="uno-log-body" class="uno-log-body">
+          <div id="uno-game-log" class="uno-game-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手牌区 -->
+    <div class="uno-hand-area">
+      <div class="uno-hand-toolbar">
+        <button id="btn-uno" class="btn btn-danger uno-uno-btn" title="剩1张牌时喊 UNO">UNO!</button>
+        <span id="uno-hand-info" class="uno-hand-info"></span>
+      </div>
+      <div id="uno-hand" class="uno-hand"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 颜色选择弹窗 ============ -->
+<div id="color-picker-modal" class="modal" style="display:none;">
+  <div class="modal-content uno-color-picker-content">
+    <h2>选择颜色</h2>
+    <p class="uno-color-picker-hint">你打出的是万能牌，请指定下一个颜色</p>
+    <div class="uno-color-picker">
+      <button class="uno-color-btn uno-color-red" data-color="red" title="红色"></button>
+      <button class="uno-color-btn uno-color-yellow" data-color="yellow" title="黄色"></button>
+      <button class="uno-color-btn uno-color-green" data-color="green" title="绿色"></button>
+      <button class="uno-color-btn uno-color-blue" data-color="blue" title="蓝色"></button>
+    </div>
+    <button id="btn-cancel-color" class="btn btn-secondary" style="margin-top:16px;">取消</button>
+  </div>
+</div>
+
+<!-- ============ 摸牌选择弹窗 ============ -->
+<div id="draw-choice-modal" class="modal" style="display:none;">
+  <div class="modal-content uno-draw-choice-content">
+    <h2>你摸了一张牌</h2>
+    <div id="draw-choice-card" class="uno-draw-choice-card"></div>
+    <p class="uno-color-picker-hint">这张牌可以打出，是否立即出牌？</p>
+    <div class="uno-draw-choice-buttons">
+      <button id="btn-play-drawn" class="btn btn-success">打出此牌</button>
+      <button id="btn-pass-drawn" class="btn btn-secondary">保留并过</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 游戏结束弹窗 ============ -->
+<div id="gameover-modal" class="modal" style="display:none;">
+  <div class="modal-content gameover-content">
+    <div class="gameover-trophy">🏆</div>
+    <h2 id="gameover-title">游戏结束！</h2>
+    <div id="gameover-winner" class="gameover-winner"></div>
+    <div class="gameover-rankings">
+      <div id="gameover-rankings"></div>
+    </div>
+    <div class="gameover-buttons">
+      <button id="btn-back-lobby" class="btn btn-primary">返回大厅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Toast 提示 ============ -->
+<div id="toast-container"></div>
+
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/sound.js"></script>
+<script src="/js/uno.js"></script>
+</body>
+</html>
